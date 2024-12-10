@@ -1,35 +1,33 @@
 import 'package:flutter/material.dart';
 
 class SettingsScreen extends StatelessWidget {
+  final Function(ThemeMode) setThemeMode;
+
+  SettingsScreen({required this.setThemeMode});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Settings')),
-      body: Column(
-        children: [
-          ListTile(
-            title: Text('Dark Mode'),
-            trailing: Switch(
-              value: Theme.of(context).brightness == Brightness.dark,
-              onChanged: (value) {
-                value
-                    ? Theme.of(context).setThemeMode(ThemeMode.dark)
-                    : Theme.of(context).setThemeMode(ThemeMode.light);
+      appBar: AppBar(
+        title: Text('Settings Screen'),
+      ),
+      body: Center(
+        child: Column(
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                setThemeMode(ThemeMode.light);
               },
+              child: Text('Switch to Light Mode'),
             ),
-          ),
-          ListTile(
-            title: Text('Language'),
-            trailing: DropdownButton<String>(
-              value: 'English',
-              items: [
-                DropdownMenuItem(value: 'English', child: Text('English')),
-                DropdownMenuItem(value: 'Spanish', child: Text('Spanish')),
-              ],
-              onChanged: (value) {},
+            ElevatedButton(
+              onPressed: () {
+                setThemeMode(ThemeMode.dark);
+              },
+              child: Text('Switch to Dark Mode'),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

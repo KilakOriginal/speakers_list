@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async'; // Import the dart:async library
 
 class TimerScreen extends StatefulWidget {
   @override
