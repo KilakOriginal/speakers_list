@@ -5,6 +5,42 @@ class NameItem extends StatelessWidget {
   final Name name;
   NameItem(this.name);
 
+  void _showContextMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Wrap(
+          children: <Widget>[
+            ListTile(
+              leading: Icon(Icons.edit),
+              title: Text('Edit Name'),
+              onTap: () {
+                Navigator.pop(context);
+                _editName(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.delete),
+              title: Text('Remove Speaker'),
+              onTap: () {
+                Navigator.pop(context);
+                _removeSpeaker(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _editName(BuildContext context) {
+    // Implement the logic to edit the name
+  }
+
+  void _removeSpeaker(BuildContext context) {
+    // Implement the logic to remove the speaker
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListTile(
@@ -13,7 +49,7 @@ class NameItem extends StatelessWidget {
         // Handle tap
       },
       onLongPress: () {
-        // Handle long press for context menu
+        _showContextMenu(context);
       },
     );
   }
