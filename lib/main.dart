@@ -11,7 +11,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.light;
 
   void _setThemeMode(ThemeMode themeMode) {
     setState(() {
@@ -22,13 +22,25 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
-      themeMode: _themeMode,
-      home: HomeScreen(
-        setThemeMode: _setThemeMode,
+      title: 'Speaker Timer',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        brightness: Brightness.light,
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(color: Colors.black),
+          bodyMedium: TextStyle(color: Colors.black),
+        ),
       ),
+      darkTheme: ThemeData(
+        primarySwatch: Colors.blue,
+        brightness: Brightness.dark,
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white),
+        ),
+      ),
+      themeMode: _themeMode,
+      home: HomeScreen(setThemeMode: _setThemeMode),
     );
   }
 }

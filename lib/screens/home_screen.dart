@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'settigns_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -74,44 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                   Navigator.pop(context);
                 }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _moveSpeaker(int oldIndex, int newIndex) {
-    setState(() {
-      if (newIndex > oldIndex) {
-        newIndex -= 1;
-      }
-      final speaker = _speakers.removeAt(oldIndex);
-      _speakers.insert(newIndex, speaker);
-    });
-  }
-
-  void _showContextMenu(BuildContext context, int index) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Wrap(
-          children: <Widget>[
-            ListTile(
-              leading: Icon(Icons.edit),
-              title: Text('Edit Name'),
-              onTap: () {
-                Navigator.pop(context);
-                _editName(index);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.delete),
-              title: Text('Remove Speaker'),
-              onTap: () {
-                Navigator.pop(context);
-                _removeSpeaker(index);
               },
             ),
           ],
@@ -262,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                               ),
                             ),
                           ),
@@ -307,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.normal,
-                                color: Colors.grey,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                               ),
                             ),
                           ),
