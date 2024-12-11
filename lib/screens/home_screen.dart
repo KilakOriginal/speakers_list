@@ -284,7 +284,7 @@ class HomeScreenState extends State<HomeScreen> {
                       alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text(
-                        '${L10n.translate('next_speakers')}:',
+                        '${L10n.translate('next_up')}:',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
