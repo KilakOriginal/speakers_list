@@ -1,0 +1,16 @@
+{
+    "name_prompt": "Rednernamen eingeben",
+    "start_timer": "Zeitgeber starten",
+    "pause_timer": "Zeitgeber pausieren",
+    "time_remaining": "Verbleibende Zeit",
+    "next_speaker": "Nächster Redner",
+    "settings": "Einstellungen",
+    "dark_mode": "Nachtmodus",
+    "time_limit": "Zeitbegrenzung pro Redner (Minuten)",
+    "edit_name": "Namen bearbeiten",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "current_speaker": "Aktueller Redner",
+    "next_up": "Als nächstes",
+    "language": "Sprache"
+}

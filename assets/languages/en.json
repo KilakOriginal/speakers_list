@@ -1,0 +1,16 @@
+{
+    "name_prompt": "Enter speaker name",
+    "start_timer": "Start Timer",
+    "pause_timer": "Pause Timer",
+    "time_remaining": "Time Remaining",
+    "next_speaker": "Next Speaker",
+    "settings": "Settings",
+    "dark_mode": "Dark Mode",
+    "time_limit": "Time Limit per Speaker (minutes)",
+    "edit_name": "Edit Name",
+    "cancel": "Cancel",
+    "save": "Save",
+    "current_speaker": "Current Speaker",
+    "next_up": "Next Up",
+    "language": "Language"
+}

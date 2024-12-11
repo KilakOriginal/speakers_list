@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../util/l10n.dart';
+import '../util/language_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -13,6 +15,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late int _selectedTimeLimit;
+  late String _selectedLanguage;
 
   @override
   void initState() {
@@ -21,16 +24,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _selectedLanguage = LanguageProvider.of(context)?.language ?? 'en';
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: Text(L10n.translate('settings')),
       ),
       body: Center(
         child: Column(
           children: [
             ListTile(
-              title: Text('Dark Mode'),
+              title: Text(L10n.translate('dark_mode')),
               trailing: Switch(
                 value: Theme.of(context).brightness == Brightness.dark,
                 onChanged: (value) {
@@ -39,7 +48,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             ListTile(
-              title: Text('Time Limit per Speaker (minutes)'),
+              title: Text(L10n.translate('time_limit')),
               trailing: DropdownButton<int>(
                 value: _selectedTimeLimit,
                 items: [5, 10, 15, 20, 30, 60].map((int value) {
@@ -54,6 +63,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _selectedTimeLimit = value;
                       widget.setTimeLimit(value * 60); // Convert minutes to seconds
                     });
+                  }
+                },
+              ),
+            ),
+            ListTile(
+              title: Text(L10n.translate('language')),
+              trailing: DropdownButton<String>(
+                value: _selectedLanguage,
+                items: ['en', 'de'].map((String value) { // Add more languages as needed
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value.toUpperCase()), // Display language code in uppercase
+                  );
+                }).toList(),
+                onChanged: (value) async {
+                  if (value != null) {
+                    setState(() {
+                      _selectedLanguage = value;
+                    });
+                    LanguageProvider.of(context)?.setLanguage(value);
                   }
                 },
               ),

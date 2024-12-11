@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 import 'settings_screen.dart';
 import '../util/undo_action.dart';
+import '../util/l10n.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -63,19 +64,19 @@ class HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edit Name'),
+          title: Text(L10n.translate('edit_name')),
           content: TextField(
             controller: _editController,
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text(L10n.translate('cancel')),
               onPressed: () {
                 Navigator.pop(context);
               },
             ),
             TextButton(
-              child: Text('Save'),
+              child: Text(L10n.translate('save')),
               onPressed: () {
                 if (_editController.text.isNotEmpty) {
                   setState(() {
@@ -239,7 +240,7 @@ class HomeScreenState extends State<HomeScreen> {
                         }
                       },
                       decoration: InputDecoration(
-                        hintText: 'Enter speaker name',
+                        hintText: L10n.translate('name_prompt'),
                       ),
                     ),
                   ),
@@ -252,7 +253,7 @@ class HomeScreenState extends State<HomeScreen> {
                           alignment: Alignment.centerLeft,
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           child: Text(
-                            'Current Speaker:',
+                            '${L10n.translate('current_speaker')}:',
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -283,7 +284,7 @@ class HomeScreenState extends State<HomeScreen> {
                       alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text(
-                        'Up Next:',
+                        '${L10n.translate('next_speakers')}:',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -344,16 +345,16 @@ class HomeScreenState extends State<HomeScreen> {
                   children: [
                     ElevatedButton(
                       onPressed: _toggleTimer,
-                      child: Text(_timerActive ? 'Pause Timer' : 'Start Timer'),
+                      child: Text(_timerActive ? L10n.translate('pause_timer') : L10n.translate('start_timer')),
                     ),
                     SizedBox(width: 20),
                     ElevatedButton(
                       onPressed: _nextSpeaker,
-                      child: Text('Next Speaker'),
+                      child: Text(L10n.translate('next_speaker')),
                     ),
                   ],
                 ),
-                Text('Time Remaining: ${_formatTime(_currentTime)}'),
+                Text("${L10n.translate('time_remaining')}: ${_formatTime(_currentTime)}"),
               ],
             ),
           ],
