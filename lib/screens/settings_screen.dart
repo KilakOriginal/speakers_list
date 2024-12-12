@@ -71,7 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: Text(L10n.translate('language')),
               trailing: DropdownButton<String>(
                 value: _selectedLanguage,
-                items: ['en', 'de'].map((String value) { // Add more languages as needed
+                items: ['de', 'en', 'fr'].map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value.toUpperCase()), // Display language code in uppercase
