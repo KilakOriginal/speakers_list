@@ -38,12 +38,6 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _insertSpeaker(String name) {
-    setState(() {
-      _speakers.insert(1, name);
-    });
-  }
-
   void _removeSpeaker(int index) {
     setState(() {
       _undoStack.add(UndoAction(type: 'remove', index: index, name: _speakers[index]));
