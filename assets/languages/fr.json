@@ -1,0 +1,16 @@
+{
+    "name_prompt": "Saisir le nom de l'orateur",
+    "start_timer": "Minuterie de démarrage",
+    "pause_timer": "Minuterie de pause",
+    "time_remaining": "Temps restant",
+    "next_speaker": "Prochain orateur",
+    "settings": "Paramètres",
+    "dark_mode": "Mode nuit",
+    "time_limit": "Limite de temps par orateur (minutes)",
+    "edit_name": "Modifier le nom",
+    "cancel": "Annuler",
+    "save": "Sauvegarder",
+    "current_speaker": "Orateur actuel",
+    "next_up": "Prochaine étape",
+    "language": "Langue"
+}
