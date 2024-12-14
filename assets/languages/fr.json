@@ -13,5 +13,8 @@
     "current_speaker": "Orateur actuel",
     "next_up": "Prochaine étape",
     "language": "Langue",
-    "section": "Section"
+    "section": "Section",
+    "edit_section": "Modifier la section",
+    "add": "Ajouter",
+    "add_speaker": "Ajouter un orateur"
 }

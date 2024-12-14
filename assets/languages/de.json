@@ -13,5 +13,8 @@
     "current_speaker": "Aktueller Redner",
     "next_up": "Als nächstes",
     "language": "Sprache",
-    "section": "Abschnitt"
+    "section": "Abschnitt",
+    "edit_section": "Abschnitt bearbeiten",
+    "add": "Hinzufügen",
+    "add_speaker": "Redner hinzufügen"
 }

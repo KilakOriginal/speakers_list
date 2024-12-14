@@ -82,22 +82,14 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _toggleSectionLock(Section section) {
     setState(() {
-      section.isOpen = !section.isOpen;     
+      section.isOpen = !section.isOpen;
     });
   }
 
-  void _addSpeaker(String name) {
+  void _addSpeakerToSection(Section section, String name) {
     setState(() {
-      Section? topmostOpenSection;
-      try {
-        topmostOpenSection = _sections.firstWhere((section) => section.isOpen);
-      } catch (e) {
-        topmostOpenSection = null;
-      }
-      if (topmostOpenSection != null) {
-        _undoStack.add(UndoAction(type: 'add_speaker', speakers: List.from(topmostOpenSection.speakers), index: _sections.indexOf(topmostOpenSection)));
-        topmostOpenSection.speakers.add(name);
-      }
+      _undoStack.add(UndoAction(type: 'add_speaker', speakers: List.from(section.speakers), index: _sections.indexOf(section)));
+      section.speakers.add(name);
     });
   }
 
@@ -157,10 +149,11 @@ class HomeScreenState extends State<HomeScreen> {
         } else {
           _timer?.cancel();
           _timerActive = false;
+          _sections.removeAt(0); // Remove the section if it becomes empty
         }
       }
     });
-  }
+  } 
 
   void undo() {
     if (_undoStack.isNotEmpty) {
@@ -233,6 +226,7 @@ class HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _timerActive = false;
+    _sections.first.isOpen = true; // Expand the topmost section immediately
   }
 
   @override
@@ -292,7 +286,7 @@ class HomeScreenState extends State<HomeScreen> {
                       controller: _controller,
                       onSubmitted: (value) {
                         if (value.isNotEmpty) {
-                          _addSpeaker(value);
+                          _addSpeakerToSection(_sections.first, value);
                           _controller.clear();
                         }
                       },
@@ -348,9 +342,48 @@ class HomeScreenState extends State<HomeScreen> {
                       children: _sections.map((section) {
                         return ExpansionTile(
                           key: ValueKey(section.name),
+                          initiallyExpanded: section == _sections.first,
                           title: Row(
                             children: [
                               Text(section.name),
+                              Spacer(),
+                              IconButton(
+                                icon: Icon(Icons.person_add),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: Text(L10n.translate('add_speaker')),
+                                        content: TextField(
+                                          controller: _controller,
+                                          decoration: InputDecoration(
+                                            hintText: L10n.translate('name_prompt'),
+                                          ),
+                                        ),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            child: Text(L10n.translate('cancel')),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                          ),
+                                          TextButton(
+                                            child: Text(L10n.translate('add')),
+                                            onPressed: () {
+                                              if (_controller.text.isNotEmpty) {
+                                                _addSpeakerToSection(section, _controller.text);
+                                                _controller.clear();
+                                                Navigator.pop(context);
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
                             ],
                           ),
                           leading: IconButton(
@@ -367,7 +400,10 @@ class HomeScreenState extends State<HomeScreen> {
                                   onChanged: (value) => _toggleSectionLock(section),
                                 ),
                               ),
-                              Icon(section.isOpen ? Icons.lock_open : Icons.lock),
+                              Container(
+                                margin: const EdgeInsets.only(right: 16.0), // Increase the right margin of the lock
+                                child: Icon(section.isOpen ? Icons.lock_open : Icons.lock),
+                              ),
                             ],
                           ),
                           children: [
@@ -381,7 +417,7 @@ class HomeScreenState extends State<HomeScreen> {
                                     section.speakers.insert(newIndex, speaker);
                                   });
                                 },
-                                children: section.speakers.map((speaker) {
+                                children: section.speakers.skip(section == _sections.first ? 1 : 0).map((speaker) { // Skip the first speaker for the first section
                                   int index = section.speakers.indexOf(speaker);
                                   return ListTile(
                                     key: ValueKey(speaker),
@@ -445,7 +481,17 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
-                Text("${L10n.translate('time_remaining')}: ${_formatTime(_currentTime)}"),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.access_time, size: 32), // Use the access_time logo
+                    SizedBox(width: 8),
+                    Text(
+                      _formatTime(_currentTime),
+                      style: TextStyle(fontSize: 32), // Increase the size of the timer
+                    ),
+                  ],
+                ),
               ],
             ),
           ],

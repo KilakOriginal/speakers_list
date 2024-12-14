@@ -13,5 +13,8 @@
     "current_speaker": "Current Speaker",
     "next_up": "Next Up",
     "language": "Language",
-    "section": "Section"
+    "section": "Section",
+    "edit_section": "Edit Section",
+    "add": "Add",
+    "add_speaker": "Add Speaker"
 }
