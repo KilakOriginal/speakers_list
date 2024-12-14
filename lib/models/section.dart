@@ -1,16 +1,11 @@
+import 'package:flutter/widgets.dart';
+
 class Section {
   String name;
+  final Key key;
   bool isOpen;
   List<String> speakers;
 
-  Section({required this.name, this.isOpen = true, List<String>? speakers})
+  Section({required this.name, required this.key, this.isOpen = true, List<String>? speakers})
       : speakers = speakers ?? [];
-
-  Section clone() {
-    return Section(
-      name: this.name,
-      isOpen: this.isOpen,
-      speakers: List<String>.from(this.speakers),
-    );
-  }
 }

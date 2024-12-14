@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:async';
 import 'settings_screen.dart';
 import '../util/undo_action.dart';
@@ -9,7 +8,7 @@ import '../models/section.dart';
 class HomeScreen extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
 
-  HomeScreen({required Key key, required this.setThemeMode}) : super(key: key);
+  const HomeScreen({required Key key, required this.setThemeMode}) : super(key: key);
 
   @override
   HomeScreenState createState() => HomeScreenState();
@@ -18,11 +17,10 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   final TextEditingController _editController = TextEditingController();
   final List<UndoAction> _undoStack = [];
-  final int _maxUndoStackSize = 10;
   final FocusNode _focusNode = FocusNode();
 
-  List<Section> _sections = [Section(name: '${L10n.translate('section')} 1')];
-  TextEditingController _controller = TextEditingController();
+  final List<Section> _sections = [Section(name: '${L10n.translate('section')} 1', key: UniqueKey())];
+  final TextEditingController _controller = TextEditingController();
   int _selectedIndex = -1;
   bool _timerActive = false;
   int _maxTimePerSpeaker = 600; // 10 minutes in seconds
@@ -31,7 +29,7 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _addSection() {
     setState(() {
-      _sections.add(Section(name: '${L10n.translate('section')} ${_sections.length + 1}'));
+      _sections.add(Section(name: '${L10n.translate('section')} ${_sections.length + 1}', key: UniqueKey()));
     });
   }
 
@@ -70,15 +68,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _closeSection(Section section) {
-    setState(() {
-      section.isOpen = false;
-      if (section.speakers.isEmpty) {
-        _undoStack.add(UndoAction(type: 'remove_section', speakers: List.from(section.speakers), index: _sections.indexOf(section)));
-        _sections.remove(section);
-      }
-    });
-  }
 
   void _toggleSectionLock(Section section) {
     setState(() {
@@ -87,10 +76,12 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   void _addSpeakerToSection(Section section, String name) {
-    setState(() {
-      _undoStack.add(UndoAction(type: 'add_speaker', speakers: List.from(section.speakers), index: _sections.indexOf(section)));
-      section.speakers.add(name);
-    });
+    if (section.isOpen) {
+      setState(() {
+        _undoStack.add(UndoAction(type: 'add_speaker', speakers: List.from(section.speakers), index: _sections.indexOf(section)));
+        section.speakers.add(name);
+      });
+    }
   }
 
   void _removeSpeaker(Section section, String speaker) {
@@ -103,57 +94,57 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _editName(int index) {
-    Section topmostOpenSection = _sections.firstWhere((section) => section.isOpen);
-    _editController.text = topmostOpenSection.speakers[index];
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(L10n.translate('edit_name')),
-          content: TextField(
-            controller: _editController,
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(L10n.translate('cancel')),
-              onPressed: () {
-                Navigator.pop(context);
-              },
+  void _editName(Section section, int index) {
+    if (index >= 0 && index < section.speakers.length) {
+      _editController.text = section.speakers[index];
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(L10n.translate('edit_name')),
+            content: TextField(
+              controller: _editController,
             ),
-            TextButton(
-              child: Text(L10n.translate('save')),
-              onPressed: () {
-                if (_editController.text.isNotEmpty) {
-                  setState(() {
-                    _undoStack.add(UndoAction(type: 'rename_speaker', speakers: List.from(topmostOpenSection.speakers), index: index, name: topmostOpenSection.speakers[index]));
-                    topmostOpenSection.speakers[index] = _editController.text;
-                  });
+            actions: <Widget>[
+              TextButton(
+                child: Text(L10n.translate('cancel')),
+                onPressed: () {
                   Navigator.pop(context);
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
+                },
+              ),
+              TextButton(
+                child: Text(L10n.translate('save')),
+                onPressed: () {
+                  if (_editController.text.isNotEmpty) {
+                    setState(() {
+                      section.speakers[index] = _editController.text;
+                    });
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   void _nextSpeaker() {
     setState(() {
-      if (_sections[0].speakers.isNotEmpty) {
-        _undoStack.add(UndoAction(type: 'next_speaker', speakers: List.from(_sections[0].speakers), name: _sections[0].speakers[0], timeRemaining: _currentTime, index: 0));
-        _sections[0].speakers.removeAt(0);
-        if (_sections[0].speakers.isNotEmpty) {
+      for (var section in _sections) {
+        if (section.speakers.isNotEmpty) {
+          section.speakers.removeAt(0);
+          if (section.speakers.isEmpty) {
+            _sections.remove(section);
+          }
           _currentTime = _maxTimePerSpeaker;
-        } else {
-          _timer?.cancel();
-          _timerActive = false;
-          _sections.removeAt(0); // Remove the section if it becomes empty
+          return;
         }
       }
+      _timerActive = false; // Stop the timer if no speakers are left
     });
-  } 
+  }
 
   void undo() {
     if (_undoStack.isNotEmpty) {
@@ -177,7 +168,7 @@ class HomeScreenState extends State<HomeScreen> {
             _sections[action.index].speakers = action.speakers!;
             break;
           case 'remove_section':
-            _sections.insert(action.index, Section(name: action.name!, speakers: action.speakers!));
+            _sections.insert(action.index, Section(name: action.name!, speakers: action.speakers!, key: UniqueKey()));
             break;
         }
       });
@@ -246,7 +237,7 @@ class HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(''),
+        title: Text('Home Screen'),
         leading: IconButton(
           icon: Icon(Icons.undo),
           onPressed: undo,
@@ -286,9 +277,10 @@ class HomeScreenState extends State<HomeScreen> {
                       controller: _controller,
                       onSubmitted: (value) {
                         if (value.isNotEmpty) {
-                          _addSpeakerToSection(_sections.first, value);
+                          final openSection = _sections.firstWhere((section) => section.isOpen, orElse: () => Section(name: '', key: UniqueKey()));
+                          _addSpeakerToSection(openSection, value);
                           _controller.clear();
-                        }
+                                              }
                       },
                       decoration: InputDecoration(
                         hintText: L10n.translate('name_prompt'),
@@ -310,7 +302,7 @@ class HomeScreenState extends State<HomeScreen> {
                         ),
                         GestureDetector(
                           onDoubleTap: () {
-                            _editName(0);
+                            _editName(_sections[0], 0);
                           },
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -407,7 +399,7 @@ class HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                           children: [
-                            Container(
+                            SizedBox(
                               height: 200, // Set a fixed height for the ReorderableListView
                               child: ReorderableListView(
                                 onReorder: (oldIndex, newIndex) {
@@ -423,7 +415,7 @@ class HomeScreenState extends State<HomeScreen> {
                                     key: ValueKey(speaker),
                                     title: GestureDetector(
                                       onDoubleTap: () {
-                                        _editName(index);
+                                        _editName(section, index);
                                       },
                                       child: Text(
                                         speaker,
@@ -476,7 +468,7 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                     SizedBox(width: 20),
                     ElevatedButton(
-                      onPressed: _nextSpeaker,
+                      onPressed: _sections.any((section) => section.speakers.isNotEmpty) ? _nextSpeaker : null,
                       child: Text(L10n.translate('next_speaker')),
                     ),
                   ],
