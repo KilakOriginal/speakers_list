@@ -281,7 +281,7 @@ class HomeScreenState extends State<HomeScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0), // Increased right and top padding
+                    padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0),
                     child: TextField(
                       controller: _controller,
                       onSubmitted: (value) {
@@ -394,14 +394,14 @@ class HomeScreenState extends State<HomeScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Transform.scale(
-                                scale: 0.8, // Make the switch smaller
+                                scale: 0.8,
                                 child: Switch(
                                   value: !section.isOpen,
                                   onChanged: (value) => _toggleSectionLock(section),
                                 ),
                               ),
                               Container(
-                                margin: const EdgeInsets.only(right: 16.0), // Increase the right margin of the lock
+                                margin: const EdgeInsets.only(right: 16.0),
                                 child: Icon(section.isOpen ? Icons.lock_open : Icons.lock),
                               ),
                             ],
@@ -457,7 +457,7 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                   SizedBox(height: 8), // Small margin before the plus button
                   IconButton(
-                    iconSize: 48, // Increase the size of the add section button
+                    iconSize: 48,
                     icon: Icon(Icons.add_circle),
                     onPressed: _addSection,
                   ),
@@ -484,11 +484,11 @@ class HomeScreenState extends State<HomeScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.access_time, size: 32), // Use the access_time logo
+                    Icon(Icons.access_time, size: 32),
                     SizedBox(width: 8),
                     Text(
                       _formatTime(_currentTime),
-                      style: TextStyle(fontSize: 32), // Increase the size of the timer
+                      style: TextStyle(fontSize: 32),
                     ),
                   ],
                 ),
