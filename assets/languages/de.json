@@ -12,5 +12,6 @@
     "save": "Speichern",
     "current_speaker": "Aktueller Redner",
     "next_up": "Als nächstes",
-    "language": "Sprache"
+    "language": "Sprache",
+    "section": "Abschnitt"
 }

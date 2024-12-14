@@ -12,5 +12,6 @@
     "save": "Sauvegarder",
     "current_speaker": "Orateur actuel",
     "next_up": "Prochaine étape",
-    "language": "Langue"
+    "language": "Langue",
+    "section": "Section"
 }

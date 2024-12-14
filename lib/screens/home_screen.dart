@@ -4,6 +4,7 @@ import 'dart:async';
 import 'settings_screen.dart';
 import '../util/undo_action.dart';
 import '../util/l10n.dart';
+import '../models/section.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -20,7 +21,7 @@ class HomeScreenState extends State<HomeScreen> {
   final int _maxUndoStackSize = 10;
   final FocusNode _focusNode = FocusNode();
 
-  List<String> _speakers = [];
+  List<Section> _sections = [Section(name: '${L10n.translate('section')} 1')];
   TextEditingController _controller = TextEditingController();
   int _selectedIndex = -1;
   bool _timerActive = false;
@@ -28,32 +29,91 @@ class HomeScreenState extends State<HomeScreen> {
   int _currentTime = 600; // 10 minutes in seconds
   Timer? _timer;
 
-  void _addSpeaker(String name) {
+  void _addSection() {
     setState(() {
-      _speakers.add(name);
-      if (_speakers.length == 1) {
-        _currentTime = _maxTimePerSpeaker;
-        _startTimer();
+      _sections.add(Section(name: '${L10n.translate('section')} ${_sections.length + 1}'));
+    });
+  }
+
+  void _renameSection(Section section) {
+    _editController.text = section.name;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(L10n.translate('edit_section')),
+          content: TextField(
+            controller: _editController,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(L10n.translate('cancel')),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            TextButton(
+              child: Text(L10n.translate('save')),
+              onPressed: () {
+                if (_editController.text.isNotEmpty) {
+                  setState(() {
+                    _undoStack.add(UndoAction(type: 'rename_section', speakers: List.from(section.speakers), index: _sections.indexOf(section)));
+                    section.name = _editController.text;
+                  });
+                  Navigator.pop(context);
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _closeSection(Section section) {
+    setState(() {
+      section.isOpen = false;
+      if (section.speakers.isEmpty) {
+        _undoStack.add(UndoAction(type: 'remove_section', speakers: List.from(section.speakers), index: _sections.indexOf(section)));
+        _sections.remove(section);
       }
     });
   }
 
-  void _removeSpeaker(int index) {
+  void _toggleSectionLock(Section section) {
     setState(() {
-      _undoStack.add(UndoAction(type: 'remove', index: index, name: _speakers[index]));
-      if (_undoStack.length > _maxUndoStackSize) {
-        _undoStack.removeAt(0);
+      section.isOpen = !section.isOpen;     
+    });
+  }
+
+  void _addSpeaker(String name) {
+    setState(() {
+      Section? topmostOpenSection;
+      try {
+        topmostOpenSection = _sections.firstWhere((section) => section.isOpen);
+      } catch (e) {
+        topmostOpenSection = null;
       }
-      _speakers.removeAt(index);
-      if (_speakers.isEmpty) {
-        _timer?.cancel();
-        _timerActive = false;
+      if (topmostOpenSection != null) {
+        _undoStack.add(UndoAction(type: 'add_speaker', speakers: List.from(topmostOpenSection.speakers), index: _sections.indexOf(topmostOpenSection)));
+        topmostOpenSection.speakers.add(name);
+      }
+    });
+  }
+
+  void _removeSpeaker(Section section, String speaker) {
+    setState(() {
+      _undoStack.add(UndoAction(type: 'remove_speaker', speakers: List.from(section.speakers), name: speaker, index: _sections.indexOf(section)));
+      section.speakers.remove(speaker);
+      if (section.speakers.isEmpty) {
+        _sections.remove(section);
       }
     });
   }
 
   void _editName(int index) {
-    _editController.text = _speakers[index];
+    Section topmostOpenSection = _sections.firstWhere((section) => section.isOpen);
+    _editController.text = topmostOpenSection.speakers[index];
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -74,11 +134,8 @@ class HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 if (_editController.text.isNotEmpty) {
                   setState(() {
-                    _undoStack.add(UndoAction(type: 'rename', index: index, name: _speakers[index]));
-                    if (_undoStack.length > _maxUndoStackSize) {
-                      _undoStack.removeAt(0);
-                    }
-                    _speakers[index] = _editController.text;
+                    _undoStack.add(UndoAction(type: 'rename_speaker', speakers: List.from(topmostOpenSection.speakers), index: index, name: topmostOpenSection.speakers[index]));
+                    topmostOpenSection.speakers[index] = _editController.text;
                   });
                   Navigator.pop(context);
                 }
@@ -92,13 +149,10 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _nextSpeaker() {
     setState(() {
-      if (_speakers.isNotEmpty) {
-        _undoStack.add(UndoAction(type: 'next', index: 0, name: _speakers[0], timeRemaining: _currentTime));
-        if (_undoStack.length > _maxUndoStackSize) {
-          _undoStack.removeAt(0);
-        }
-        _speakers.removeAt(0);
-        if (_speakers.isNotEmpty) {
+      if (_sections[0].speakers.isNotEmpty) {
+        _undoStack.add(UndoAction(type: 'next_speaker', speakers: List.from(_sections[0].speakers), name: _sections[0].speakers[0], timeRemaining: _currentTime, index: 0));
+        _sections[0].speakers.removeAt(0);
+        if (_sections[0].speakers.isNotEmpty) {
           _currentTime = _maxTimePerSpeaker;
         } else {
           _timer?.cancel();
@@ -113,15 +167,24 @@ class HomeScreenState extends State<HomeScreen> {
       final action = _undoStack.removeLast();
       setState(() {
         switch (action.type) {
-          case 'remove':
-            _speakers.insert(action.index, action.name!);
+          case 'add_speaker':
+            _sections[action.index].speakers = action.speakers!;
             break;
-          case 'rename':
-            _speakers[action.index] = action.name!;
+          case 'remove_speaker':
+            _sections[action.index].speakers = action.speakers!;
             break;
-          case 'next':
-            _speakers.insert(0, action.name!);
+          case 'rename_speaker':
+            _sections[action.index].speakers = action.speakers!;
+            break;
+          case 'next_speaker':
+            _sections[0].speakers = action.speakers!;
             _currentTime = action.timeRemaining!;
+            break;
+          case 'rename_section':
+            _sections[action.index].speakers = action.speakers!;
+            break;
+          case 'remove_section':
+            _sections.insert(action.index, Section(name: action.name!, speakers: action.speakers!));
             break;
         }
       });
@@ -130,7 +193,7 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _startTimer() {
     _timer?.cancel();
-    if (_timerActive && _speakers.isNotEmpty) {
+    if (_timerActive && _sections[0].speakers.isNotEmpty) {
       _timer = Timer.periodic(Duration(seconds: 1), (timer) {
         setState(() {
           if (_currentTime > 0) {
@@ -145,7 +208,7 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   void _toggleTimer() {
-    if (_speakers.isNotEmpty) {
+    if (_sections[0].speakers.isNotEmpty) {
       setState(() {
         _timerActive = !_timerActive;
         if (_timerActive) {
@@ -160,7 +223,7 @@ class HomeScreenState extends State<HomeScreen> {
   void _setTimeLimit(int newTimeLimit) {
     setState(() {
       _maxTimePerSpeaker = newTimeLimit;
-      if (_speakers.isNotEmpty) {
+      if (_sections[0].speakers.isNotEmpty) {
         _currentTime = newTimeLimit;
       }
     });
@@ -239,7 +302,7 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   SizedBox(height: 16),
-                  if (_speakers.isNotEmpty)
+                  if (_sections.isNotEmpty && _sections[0].speakers.isNotEmpty)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -260,7 +323,7 @@ class HomeScreenState extends State<HomeScreen> {
                             child: Align(
                               alignment: Alignment.center,
                               child: Text(
-                                _speakers[0],
+                                _sections[0].speakers[0],
                                 style: TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
@@ -273,62 +336,96 @@ class HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   SizedBox(height: 16),
-                  if (_speakers.length > 1)
-                    Container(
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        '${L10n.translate('next_up')}:',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  if (_speakers.length > 1)
-                    Flexible(
-                      fit: FlexFit.loose,
-                      child: ReorderableListView(
-                        onReorder: (oldIndex, newIndex) {
-                          // Adjust indices to account for the current speaker
-                          if (newIndex > oldIndex) {
-                            newIndex -= 1;
-                          }
-                          setState(() {
-                            final speaker = _speakers.removeAt(oldIndex + 1);
-                            _speakers.insert(newIndex + 1, speaker);
-                          });
-                        },
-                        children: _speakers.skip(1).map((speaker) {
-                          int index = _speakers.indexOf(speaker);
-                          return ListTile(
-                            key: ValueKey(speaker),
-                            title: GestureDetector(
-                              onDoubleTap: () {
-                                _editName(index);
-                              },
-                              child: Text(
-                                speaker,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.normal,
-                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  Expanded(
+                    child: ReorderableListView(
+                      onReorder: (oldIndex, newIndex) {
+                        setState(() {
+                          if (newIndex > oldIndex) newIndex--;
+                          final section = _sections.removeAt(oldIndex);
+                          _sections.insert(newIndex, section);
+                        });
+                      },
+                      children: _sections.map((section) {
+                        return ExpansionTile(
+                          key: ValueKey(section.name),
+                          title: Row(
+                            children: [
+                              Text(section.name),
+                            ],
+                          ),
+                          leading: IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: () => _renameSection(section),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Transform.scale(
+                                scale: 0.8, // Make the switch smaller
+                                child: Switch(
+                                  value: !section.isOpen,
+                                  onChanged: (value) => _toggleSectionLock(section),
                                 ),
                               ),
+                              Icon(section.isOpen ? Icons.lock_open : Icons.lock),
+                            ],
+                          ),
+                          children: [
+                            Container(
+                              height: 200, // Set a fixed height for the ReorderableListView
+                              child: ReorderableListView(
+                                onReorder: (oldIndex, newIndex) {
+                                  setState(() {
+                                    if (newIndex > oldIndex) newIndex--;
+                                    final speaker = section.speakers.removeAt(oldIndex);
+                                    section.speakers.insert(newIndex, speaker);
+                                  });
+                                },
+                                children: section.speakers.map((speaker) {
+                                  int index = section.speakers.indexOf(speaker);
+                                  return ListTile(
+                                    key: ValueKey(speaker),
+                                    title: GestureDetector(
+                                      onDoubleTap: () {
+                                        _editName(index);
+                                      },
+                                      child: Text(
+                                        speaker,
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.normal,
+                                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                                        ),
+                                      ),
+                                    ),
+                                    trailing: IconButton(
+                                      icon: Icon(Icons.close),
+                                      onPressed: () {
+                                        _removeSpeaker(section, speaker);
+                                      },
+                                    ),
+                                    selected: _selectedIndex == index,
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedIndex = index;
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
                             ),
-                            trailing: IconButton(
-                              icon: Icon(Icons.close),
-                              onPressed: () {
-                                _removeSpeaker(index);
-                              },
-                            ),
-                            selected: _selectedIndex == index,
-                            onTap: () {
-                              setState(() {
-                                _selectedIndex = index;
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
+                          ],
+                        );
+                      }).toList(),
                     ),
+                  ),
+                  SizedBox(height: 8), // Small margin before the plus button
+                  IconButton(
+                    iconSize: 48, // Increase the size of the add section button
+                    icon: Icon(Icons.add_circle),
+                    onPressed: _addSection,
+                  ),
+                  SizedBox(height: 8), // Small margin after the plus button
                 ],
               ),
             ),

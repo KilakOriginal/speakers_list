@@ -12,5 +12,6 @@
     "save": "Save",
     "current_speaker": "Current Speaker",
     "next_up": "Next Up",
-    "language": "Language"
+    "language": "Language",
+    "section": "Section"
 }
